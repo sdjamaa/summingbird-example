@@ -46,8 +46,8 @@ object SummingbirdExampleBuild extends Build {
     scalacOptions ++= Seq(
       "-unchecked",
       "-deprecation",
-      "-Yresolve-term-conflict:package",
-      "-Xlog-implicits"
+      "-Yresolve-term-conflict:package"//,
+//      "-Xlog-implicits"
     ),
 
     // Publishing options:

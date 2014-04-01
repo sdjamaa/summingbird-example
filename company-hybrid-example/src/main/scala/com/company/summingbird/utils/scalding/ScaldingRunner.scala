@@ -5,11 +5,13 @@ import com.twitter.summingbird.scalding.Scalding
 import com.twitter.scalding.{Hdfs, TextLine}
 import com.twitter.summingbird.scalding.store.{DirectoryBatchedStore, InitialBatchedStore, VersionedStore}
 import com.twitter.storehaus.algebra.MergeableStore
+import com.twitter.storehaus.memcache.MemcacheStore
 import org.apache.hadoop.conf.Configuration
 import com.twitter.summingbird.batch.state.HDFSState
 import com.twitter.summingbird.batch.Timestamp
 import com.company.summingbird.utils.reader.SequenceFileReader
 import org.apache.hadoop.io.{Writable, Text, LongWritable}
+import com.twitter.summingbird.batch.BatchID
 
 /**
  * Created by s.djamaa on 31/03/14.
@@ -26,9 +28,9 @@ object ScaldingRunner {
 
   var hasBeenLaunched = false
 
-  val jobDir = "/home/s.djamaa/Tools/tmp/"
+  val jobDir = "/Users/sdjamaa/tmp/"
 
-  val src = Producer.source[Scalding, String](Scalding.pipeFactoryExact[String]( _ => TextLine(jobDir + "input1")))
+  val src = Producer.source[Scalding, String](Scalding.pipeFactoryExact[String]( _ => TextLine(jobDir + "input")))
 
   /*implicit def stringToText(s: String): Text = new Text(s)
 
@@ -38,7 +40,7 @@ object ScaldingRunner {
 
   val store = new InitialBatchedStore(batcher.currentBatch, actualStore)
 
-  val servingStore = null// MergeableStore.fromStore(store)
+  val servingStore = MemcacheStore.typed[String, (BatchID, Long)](MemcacheStore.defaultClient("memcached", "localhost:11211"), "scaldingLookCount")
 
   val mode = Hdfs(true, new Configuration)
 
