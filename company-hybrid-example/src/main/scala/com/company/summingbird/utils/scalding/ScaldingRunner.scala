@@ -3,12 +3,13 @@ package com.company.summingbird.utils.scalding
 import com.twitter.summingbird.Producer
 import com.twitter.summingbird.scalding.Scalding
 import com.twitter.scalding.{Hdfs, TextLine}
-import com.twitter.summingbird.scalding.store.{InitialBatchedStore, VersionedStore}
+import com.twitter.summingbird.scalding.store.{DirectoryBatchedStore, InitialBatchedStore, VersionedStore}
 import com.twitter.storehaus.algebra.MergeableStore
 import org.apache.hadoop.conf.Configuration
 import com.twitter.summingbird.batch.state.HDFSState
 import com.twitter.summingbird.batch.Timestamp
 import com.company.summingbird.utils.reader.SequenceFileReader
+import org.apache.hadoop.io.{Writable, Text, LongWritable}
 
 /**
  * Created by s.djamaa on 31/03/14.
@@ -21,7 +22,7 @@ object ScaldingExecutor {
 
 object ScaldingRunner {
 
-  import com.company.summingbird.jobs.JsonParsingJob._
+  import com.company.summingbird.jobs.JsonParsingJob._, com.company.summingbird.serialization.StringToBytesSerialization._
 
   var hasBeenLaunched = false
 
@@ -29,7 +30,13 @@ object ScaldingRunner {
 
   val src = Producer.source[Scalding, String](Scalding.pipeFactoryExact[String]( _ => TextLine(jobDir + "input1")))
 
-  val store = new InitialBatchedStore(batcher.currentBatch, VersionedStore[String, Long](jobDir + "output"))
+  /*implicit def stringToText(s: String): Text = new Text(s)
+
+  implicit def intToLongWritable(l : Long): LongWritable = new LongWritable(l)*/
+
+  val actualStore = VersionedStore[String, Long](jobDir + "output") //new DirectoryBatchedStore[A, B](jobDir + "output")
+
+  val store = new InitialBatchedStore(batcher.currentBatch, actualStore)
 
   val servingStore = null// MergeableStore.fromStore(store)
 

@@ -13,8 +13,6 @@ import com.twitter.bijection._
  */
 object JsonParsingJob {
 
-  import com.company.summingbird.serialization.StringToBytesSerialization._
-
   implicit val timeOf: TimeExtractor[String] = TimeExtractor(_ => new Date().getTime)//extractTime)
   implicit val batcher = Batcher.ofMinutes(2)
 

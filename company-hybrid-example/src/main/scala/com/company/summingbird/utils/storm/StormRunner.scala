@@ -24,7 +24,7 @@ object StormExecutor {
 
 object StormRunner {
 
-  import com.company.summingbird.jobs.JsonParsingJob._
+  import com.company.summingbird.jobs.JsonParsingJob._, com.company.summingbird.serialization.StringToBytesSerialization._
 
   lazy val stringLongStore =
     MemcacheStore.mergeable[(String, BatchID), Long](MemcacheStore.defaultClient("memcached", "localhost:11211"), "timestampCount")

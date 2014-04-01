@@ -9,6 +9,8 @@ import com.company.summingbird.utils.scalding.{ScaldingExecutor, ScaldingRunner}
  * Created by s.djamaa on 31/03/14.
  */
 object HybridClient {
+  import com.company.summingbird.jobs.JsonParsingJob._
+
   lazy val clientStore = ClientStore(ScaldingRunner.servingStore, StormRunner.stringLongStore, 3)
 
   def main(args: Array[String]) {

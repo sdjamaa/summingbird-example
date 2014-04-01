@@ -11,6 +11,9 @@ import java.util.Arrays
  * Created by s.djamaa on 31/03/14.
  */
 object SequenceFileReader {
+
+  import com.company.summingbird.serialization.StringToBytesSerialization._
+
   def deserialize[V](bytes: Array[Byte])(implicit inj: Injection[(BatchID, V), Array[Byte]], c: Codec[V]) = inj.invert(bytes)
 
   def apply(args: String) {
