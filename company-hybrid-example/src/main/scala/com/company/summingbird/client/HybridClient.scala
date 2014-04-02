@@ -15,7 +15,7 @@ object HybridClient {
 
   def main(args: Array[String]) {
     StormExecutor(args)
-    ScaldingExecutor(args)
+    ScaldingExecutor()
   }
 
   def lookup(word: String): Option[Long] =

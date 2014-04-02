@@ -8,18 +8,19 @@ import com.twitter.storehaus.algebra.MergeableStore
 import com.twitter.storehaus.memcache.MemcacheStore
 import org.apache.hadoop.conf.Configuration
 import com.twitter.summingbird.batch.state.HDFSState
-import com.twitter.summingbird.batch.Timestamp
+import com.twitter.summingbird.batch.{BatchID, Timestamp}
 import com.company.summingbird.utils.reader.SequenceFileReader
 import org.apache.hadoop.io.{Writable, Text, LongWritable}
-import com.twitter.summingbird.batch.BatchID
 import com.company.summingbird
 
 /**
  * Created by s.djamaa on 31/03/14.
  */
 object ScaldingExecutor {
-  def apply(args: Array[String]) {
-    ScaldingRunner(args)
+  def apply() {
+    // Should build Hadoop configuration with Executor from summingbird.scalding package
+    // In the form of Args = Map("start-time" -> 13530350, "batches" -> 1 ...)
+    //Executor(args, ScaldingRunner())
   }
 }
 
@@ -27,23 +28,21 @@ object ScaldingRunner {
 
   import com.company.summingbird.jobs.JsonParsingJob._, com.company.summingbird.serialization.StringToBytesSerialization._
 
+  val jobName = "billable"
+
   var hasBeenLaunched = false
 
-  val src = Producer.source[Scalding, String](Scalding.pipeFactoryExact[String]( _ => TextLine(inputDir)))
+  val src = Producer.source[Scalding, String](Scalding.pipeFactoryExact[String]( _ => TextLine(inputDir + "/" + jobName)))
 
-  val actualStore = VersionedStore[String, Long](outputDir)
+  val actualStore = VersionedStore[String, Long](outputDir + "/" + jobName)
 
   val store = new InitialBatchedStore(batcher.currentBatch, actualStore)
 
-  val servingStore = MemcacheStore.typed[String, (BatchID, Long)](MemcacheStore.defaultClient("memcached", summingbird.memcachedHost), "scaldingLookCount")
+  val servingStore = MemcacheStore.typed[String, (BatchID, Long)](MemcacheStore.defaultClient("memcached", summingbird.memcachedHost), jobName)
 
   val mode = Hdfs(true, new Configuration)
 
-  val job = Scalding("billable")
-
-  def apply(args: Array[String]) {
-    println("Current batch is : " + batcher.currentBatch)
-  }
+  val job = Scalding(jobName)
 
   def runJob = {
 
@@ -61,12 +60,14 @@ object ScaldingRunner {
           job.plan(jsonKeyCount[Scalding](src, store)))
       hasBeenLaunched = true
     }
+
+    SequenceFileReader[String, Long](outputDir + "/" + jobName + "/" + batcher.earliestTimeOf(batcher.currentBatch + 1).milliSinceEpoch + "/part-00000")((k, bAndV) => servingStore.put((k,Some(bAndV))))
   }
 
   def queryFiles(arg: Option[String] = None) = {
     arg match {
-      case Some(path) => SequenceFileReader(outputDir + path + "/part-00000")
-      case None => SequenceFileReader(outputDir + batcher.earliestTimeOf(batcher.currentBatch).milliSinceEpoch + "/part-00000")
+      case Some(path) => SequenceFileReader[String, Long](outputDir + "/" + jobName + "/" + path + "/part-00000")((k, bAndV) => println(k + " : " + bAndV._2))
+      case None => SequenceFileReader[String, Long](outputDir + "/" + jobName + "/" + batcher.earliestTimeOf(batcher.currentBatch).milliSinceEpoch + "/part-00000")((k, bAndV) => println(k + " : " + bAndV._2))
     }
   }
 
