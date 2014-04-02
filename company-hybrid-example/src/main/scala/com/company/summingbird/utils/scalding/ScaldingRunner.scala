@@ -12,6 +12,7 @@ import com.twitter.summingbird.batch.Timestamp
 import com.company.summingbird.utils.reader.SequenceFileReader
 import org.apache.hadoop.io.{Writable, Text, LongWritable}
 import com.twitter.summingbird.batch.BatchID
+import com.company.summingbird
 
 /**
  * Created by s.djamaa on 31/03/14.
@@ -28,19 +29,13 @@ object ScaldingRunner {
 
   var hasBeenLaunched = false
 
-  val jobDir = "/Users/sdjamaa/tmp/"
+  val src = Producer.source[Scalding, String](Scalding.pipeFactoryExact[String]( _ => TextLine(inputDir)))
 
-  val src = Producer.source[Scalding, String](Scalding.pipeFactoryExact[String]( _ => TextLine(jobDir + "input")))
-
-  /*implicit def stringToText(s: String): Text = new Text(s)
-
-  implicit def intToLongWritable(l : Long): LongWritable = new LongWritable(l)*/
-
-  val actualStore = VersionedStore[String, Long](jobDir + "output") //new DirectoryBatchedStore[A, B](jobDir + "output")
+  val actualStore = VersionedStore[String, Long](outputDir)
 
   val store = new InitialBatchedStore(batcher.currentBatch, actualStore)
 
-  val servingStore = MemcacheStore.typed[String, (BatchID, Long)](MemcacheStore.defaultClient("memcached", "localhost:11211"), "scaldingLookCount")
+  val servingStore = MemcacheStore.typed[String, (BatchID, Long)](MemcacheStore.defaultClient("memcached", summingbird.memcachedHost), "scaldingLookCount")
 
   val mode = Hdfs(true, new Configuration)
 
@@ -56,12 +51,12 @@ object ScaldingRunner {
 
     if (!hasBeenLaunched)
       job
-        .run(HDFSState("/home/s.djamaa/Tools/tmp/waitstate", startTime = Some(Timestamp(System.currentTimeMillis())) ),
+        .run(HDFSState(waitstateDir, startTime = Some(Timestamp(System.currentTimeMillis())) ),
           mode,
           job.plan(jsonKeyCount[Scalding](src, store)))
     else {
       job
-        .run(HDFSState("/home/s.djamaa/Tools/tmp/waitstate"),
+        .run(HDFSState(waitstateDir),
           mode,
           job.plan(jsonKeyCount[Scalding](src, store)))
       hasBeenLaunched = true
@@ -70,8 +65,8 @@ object ScaldingRunner {
 
   def queryFiles(arg: Option[String] = None) = {
     arg match {
-      case Some(path) => SequenceFileReader(jobDir + "/output/" + path + "/part-00000")
-      case None => SequenceFileReader(jobDir + "/output/" + batcher.earliestTimeOf(batcher.currentBatch).milliSinceEpoch + "/part-00000")
+      case Some(path) => SequenceFileReader(outputDir + path + "/part-00000")
+      case None => SequenceFileReader(outputDir + batcher.earliestTimeOf(batcher.currentBatch).milliSinceEpoch + "/part-00000")
     }
   }
 

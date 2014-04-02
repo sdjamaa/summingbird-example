@@ -11,6 +11,7 @@ import com.twitter.summingbird.storm.option.{SpoutParallelism, FlatMapParallelis
 import com.twitter.summingbird.option.CacheSize
 import com.twitter.storehaus.memcache.MemcacheStore
 import com.company.summingbird.jobs.JsonParsingJob._
+import com.company.summingbird
 
 /**
  * Created by s.djamaa on 31/03/14.
@@ -27,11 +28,11 @@ object StormRunner {
   import com.company.summingbird.jobs.JsonParsingJob._, com.company.summingbird.serialization.StringToBytesSerialization._
 
   lazy val stringLongStore =
-    MemcacheStore.mergeable[(String, BatchID), Long](MemcacheStore.defaultClient("memcached", "localhost:11211"), "timestampCount")
+    MemcacheStore.mergeable[(String, BatchID), Long](MemcacheStore.defaultClient("memcached", summingbird.memcachedHost), "timestampCount")
 
   val scheme: Scheme[String] = Scheme { bytes => Some(new String(bytes)) }
 
-  val spout = new KafkaSpout(scheme, "127.0.0.1:2181", "/brokers", "test", "0", "")
+  val spout = new KafkaSpout(scheme, zkHost, zkBrokerPath, zkTopic, zkAppId, zkRoot)
 
   val storeSupplier: StormStore[String, Long] = Storm.store(stringLongStore)
 
@@ -44,12 +45,8 @@ object StormRunner {
         config ++ List((BTConfig.TOPOLOGY_ACKER_EXECUTORS -> (new java.lang.Integer(0))))
       }
 
-      override def getNamedOptions: Map[String, Options] = Map(
-        "DEFAULT" -> Options().set(SummerParallelism(2))
-          .set(FlatMapParallelism(80))
-          .set(SpoutParallelism(16))
-          .set(CacheSize(100))
-      )
+      override def getNamedOptions: Map[String, Options] = stormOpts
+
       override def graph = jsonKeyCount[Storm](spout, storeSupplier) //job(spout, storeSupplier)
     }
 

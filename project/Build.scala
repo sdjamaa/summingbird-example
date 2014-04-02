@@ -28,7 +28,8 @@ object SummingbirdExampleBuild extends Build {
       "org.scalacheck" %% "scalacheck" % "1.10.0" % "test",
       // These satisify's scaldings log4j needs when in test mode
       "log4j" % "log4j" % "1.2.16" % "test",
-      "org.slf4j" % "slf4j-log4j12" % slf4jVersion % "test"
+      "org.slf4j" % "slf4j-log4j12" % slf4jVersion % "test",
+      "com.typesafe" % "config" % "1.2.0"
     ),
 
     libraryDependencies <+= scalaVersion(specs2Import(_)),
