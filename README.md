@@ -80,8 +80,11 @@ To test the Storm consumer, type in the Scala REPL:
     scala> import com.company.summingbird.client._
     import com.company.summingbird.client._
     scala> HybridClient.stormLookup("timestamp") // This tests the Storm store linked to the ClientStore
-    res1: Option[Long] = Some(4)
-    scala> HybridClient.lookup("timestamp") // This tests the ClientStore (merge between Storm and Scalding stores for an implicit BatchID)
+    res1: Option[Long] = Some(2)
+    scala> HybridClient.processHadoop // This tests the Storm store linked to the ClientStore
+    scala> HybridClient.lookup("timestamp") // This inserts a file containing 2 lines with timestamp and 1 line with another json key/value pair
+    [... lot of logs ...]
+    scala> HybridClient.lookup("timestamp") // This queries the ClientStore to retrieved merged values between Storm and Scalding stores
     res2: Option[Long] = Some(4)
 ```
 
