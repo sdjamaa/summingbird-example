@@ -17,6 +17,7 @@ import com.company.summingbird.utils.reader.SequenceFileReader
 import com.twitter.summingbird.storm.{ Storm, StormStore }
 import com.twitter.algebird.Monoid
 import com.twitter.storehaus.WritableStore
+import com.twitter.summingbird.sink.CompoundSink
 
 /**
  * Created by s.djamaa on 31/03/14.
@@ -24,6 +25,8 @@ import com.twitter.storehaus.WritableStore
 object JsonParsingJob extends AbstractJob[Long] with java.io.Serializable {
 
   import com.twitter.algebird.Monoid._, com.company.summingbird.serialization.StringToBytesSerialization._
+
+  def inj = kInjection[String]
 
   override val monoid = longMonoid
 

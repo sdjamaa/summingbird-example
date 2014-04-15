@@ -47,8 +47,8 @@ object SummingbirdExampleBuild extends Build {
     scalacOptions ++= Seq(
       "-unchecked",
       "-deprecation",
-      "-Yresolve-term-conflict:package"//,
-//      "-Xlog-implicits"
+      "-Yresolve-term-conflict:package"/*,
+      "-Xlog-implicits"*/
     ),
 
     // Publishing options:
@@ -126,10 +126,11 @@ object SummingbirdExampleBuild extends Build {
       "com.twitter" %% "summingbird-core" % summingbirdCoreVersion,
       "com.twitter" %% "summingbird-client" % summingbirdClientVersion,
       "com.twitter" %% "summingbird-scalding" % summingbirdScaldingVersion,
-      "com.twitter" %% "summingbird-scalding-test" % summingbirdScaldingVersion,
+      "com.twitter" %% "summingbird-builder" % summingbirdScaldingVersion,
       "com.twitter" %% "scalding-args" % scaldingVersion,
       "com.twitter" %% "bijection-core" % bijectionVersion,
 
+      "com.twitter" %% "summingbird-scalding-test" % summingbirdScaldingVersion,
       "org.scalatest" %% "scalatest" % "1.9.2" withSources(),
       "com.twitter" %% "summingbird-storm-test" % summingbirdStormVersion,
       "junit" % "junit" % "4.4"

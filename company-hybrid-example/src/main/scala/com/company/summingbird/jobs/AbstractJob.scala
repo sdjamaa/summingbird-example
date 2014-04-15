@@ -11,6 +11,7 @@ import com.twitter.summingbird.storm.StormStore
 import com.twitter.algebird.Monoid
 import com.company.summingbird.client.HybridClient
 import com.twitter.bijection._
+import com.twitter.storehaus.algebra.MergeableStore
 
 abstract class AbstractJob[V] extends java.io.Serializable {
 
@@ -51,9 +52,13 @@ abstract class AbstractJob[V] extends java.io.Serializable {
 
   val onlineStore: ReadableStore[String, (BatchID, V)]
 
-  val onlineStormStore: ReadableStore[(String, BatchID), V]
+  var onlineStormStore: MergeableStore[(String, BatchID), V]//ReadableStore[(String, BatchID), V]
 
-  val stormStore: StormStore[String, V]
+  var stormStore: StormStore[String, V]
 
   def writeToStore: Unit
+
+
+
+  implicit def inj: Injection[(String, BatchID), Array[Byte]]
 }

@@ -10,17 +10,18 @@ import com.twitter.summingbird.storm.{ Executor, StormExecutionConfig, Storm, St
 import backtype.storm.{ Config => BTConfig }
 import com.twitter.summingbird.Options
 import com.twitter.scalding.Args
+import com.twitter.bijection.Injection
 
 /**
  * Created by s.djamaa on 09/04/14.
  */
 object StormJob {
-  def apply[V](job: AbstractJob[V]) = {
+  def apply[V](job: AbstractJob[V])(implicit inj: Injection[(String, BatchID), Array[Byte]]) = {
     new StormJob[V](job)
   }
 }
 
-class StormJob[V](job: AbstractJob[V]) extends java.io.Serializable {
+class StormJob[V](job: AbstractJob[V])(implicit inj: Injection[(String, BatchID), Array[Byte]]) extends java.io.Serializable {
   lazy implicit val batcher = job.batcher
 
   lazy implicit val timeOf = job.timeOf
@@ -32,6 +33,10 @@ class StormJob[V](job: AbstractJob[V]) extends java.io.Serializable {
   lazy val src = new KafkaSpout(scheme, zkHost, zkBrokerPath, zkTopic, zkAppId, zkRoot)
 
   def runJob(args: Array[String]) = {
+
+    job.onlineStormStore = MemcacheStore.mergeable[(String, BatchID), V](MemcacheStore.defaultClient("memcached", summingbird.memcachedHost), "timestampCount")
+    job.stormStore = Storm.store(job.onlineStormStore);
+
     Executor(args, createStormConfig(_))
   }
 
