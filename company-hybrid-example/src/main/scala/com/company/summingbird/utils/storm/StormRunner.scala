@@ -1,4 +1,4 @@
-package com.company.summingbird.utils.storm
+/*package com.company.summingbird.utils.storm
 
 import com.twitter.summingbird.storm.{Executor, StormExecutionConfig, Storm, StormStore}
 import com.twitter.summingbird.batch.BatchID
@@ -47,9 +47,9 @@ object StormRunner {
 
       override def getNamedOptions: Map[String, Options] = stormOpts
 
-      override def graph = jsonKeyCount[Storm](spout, storeSupplier) //job(spout, storeSupplier)
+      override def graph = null//jsonKeyCount[Storm](spout, storeSupplier) //job(spout, storeSupplier)
     }
 
   def lookup(word: String) = StormRunner.stringLongStore.get(word -> batcher.currentBatch)
 
-}
+}*/

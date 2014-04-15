@@ -1,36 +1,44 @@
 package com.company.summingbird.client
 
+import com.company.summingbird.jobs.AbstractJob
 import com.twitter.summingbird.store.ClientStore
 import com.twitter.util.Await
-import com.company.summingbird.utils.storm.{StormExecutor, StormRunner}
-import com.company.summingbird.utils.scalding.{ScaldingExecutor, ScaldingRunner}
+import com.company.summingbird.utils.reader.SequenceFileReader
 
 /**
  * Created by s.djamaa on 31/03/14.
  */
 object HybridClient {
-  import com.company.summingbird.jobs.JsonParsingJob._
+  def apply[V](job: AbstractJob[V]) = {
+    new HybridClient[V](job)
+  }
+}
 
-  lazy val clientStore = ClientStore(ScaldingRunner.servingStore, StormRunner.stringLongStore, 3)
+class HybridClient[V](val job: AbstractJob[V]) {
 
-  def main(args: Array[String]) {
-    StormExecutor(args)
-    ScaldingExecutor()
+  implicit val batcher = job.batcher
+
+  implicit val mno = job.monoid
+
+  val clientStore = {
+    ClientStore(job.onlineStore, job.onlineStormStore, 3)
   }
 
-  def lookup(word: String): Option[Long] =
+  def get(word: String) = println(lookup(word))
+
+  def lookup(word: String) =
     Await.result {
+      println("Batcher :" + batcher.currentBatch)
       clientStore.get(word)
     }
 
-  def stormLookup(word: String): Option[Long] =
+  /*def stormLookup(word: String): Option[Long] =
     Await.result {
-      StormRunner.lookup(word)
-    }
+      job.stormLookup(word)
+    }*/
 
-  def hadoopLookup = ScaldingRunner.lookup
-
-  def processHadoop = {
-    ScaldingRunner.runJob
-  }
+  /*def processHadoop = {
+    jsonJob.runScaldingJob
+  }*/
 }
+

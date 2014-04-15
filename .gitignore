@@ -19,3 +19,8 @@ project/plugins/project/
 # IntelliJ specific
 .idea/
 .idea_modules/
+
+# Eclipse specific
+.classpath
+.project
+.settings

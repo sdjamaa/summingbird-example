@@ -2,6 +2,8 @@ package com.company
 package summingbird
 package utils
 
+import com.company.summingbird.jobs.AbstractJob
+
 /**
  * Created by s.djamaa on 02/04/14.
  */

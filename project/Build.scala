@@ -102,6 +102,16 @@ object SummingbirdExampleBuild extends Build {
     ).settings(net.virtualvoid.sbt.graph.Plugin.graphSettings: _*)
   }
 
+  lazy val kafkaInjector = module("kafka-injector").settings(
+    libraryDependencies ++= Seq(
+      "org.slf4j" % "slf4j-log4j12" % slf4jVersion,
+      "org.apache.kafka" % "kafka" % "0.7.2" //withSources()
+        exclude("javax.jms", "jms")
+        exclude("com.sun.jdmk", "jmxtools")
+        exclude("com.sun.jmx", "jmxri")
+    )
+  )
+
   lazy val hybridExample = module("hybrid-example").settings(
     libraryDependencies ++= Seq(
       //"log4j" % "log4j" % "1.2.16",
@@ -118,7 +128,11 @@ object SummingbirdExampleBuild extends Build {
       "com.twitter" %% "summingbird-scalding" % summingbirdScaldingVersion,
       "com.twitter" %% "summingbird-scalding-test" % summingbirdScaldingVersion,
       "com.twitter" %% "scalding-args" % scaldingVersion,
-      "com.twitter" %% "bijection-core" % bijectionVersion
+      "com.twitter" %% "bijection-core" % bijectionVersion,
+
+      "org.scalatest" %% "scalatest" % "1.9.2" withSources(),
+      "com.twitter" %% "summingbird-storm-test" % summingbirdStormVersion,
+      "junit" % "junit" % "4.4"
     )
   )
 }

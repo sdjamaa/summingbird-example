@@ -1,8 +1,8 @@
-package com.company.summingbird.utils.scalding
+/*package com.company.summingbird.utils.scalding
 
 import com.twitter.summingbird.Producer
 import com.twitter.summingbird.scalding.Scalding
-import com.twitter.scalding.{Hdfs, TextLine}
+import com.twitter.scalding.{MultipleTextLineFiles, DateRange, Hdfs, TextLine}
 import com.twitter.summingbird.scalding.store.{DirectoryBatchedStore, InitialBatchedStore, VersionedStore}
 import com.twitter.storehaus.algebra.MergeableStore
 import com.twitter.storehaus.memcache.MemcacheStore
@@ -12,6 +12,17 @@ import com.twitter.summingbird.batch.{BatchID, Timestamp}
 import com.company.summingbird.utils.reader.SequenceFileReader
 import org.apache.hadoop.io.{Writable, Text, LongWritable}
 import com.company.summingbird
+import java.text.SimpleDateFormat
+import java.util.TimeZone
+import com.twitter.scalding.Hdfs
+import scala.Some
+import com.twitter.scalding.MultipleTextLineFiles
+import com.twitter.scalding.Hdfs
+import scala.Some
+import com.twitter.scalding.MultipleTextLineFiles
+import com.twitter.scalding.Hdfs
+import scala.Some
+import com.twitter.scalding.MultipleTextLineFiles
 
 /**
  * Created by s.djamaa on 31/03/14.
@@ -32,7 +43,22 @@ object ScaldingRunner {
 
   var hasBeenLaunched = false
 
-  val src = Producer.source[Scalding, String](Scalding.pipeFactoryExact[String]( _ => TextLine(inputDir + "/" + jobName)))
+  val DataFileDateFormat = new SimpleDateFormat("yyyyMMdd")
+  DataFileDateFormat.setTimeZone(TimeZone.getTimeZone("UTC"))
+
+  def buildFolders(range: DateRange) = {
+
+    val start = batcher.batchOf(range.start.value)
+    val end = batcher.batchOf(range.end.value)
+
+    val batches: Seq[BatchID] = Stream.iterate(start)(_ + 1).takeWhile(_ <= end)
+
+    val files = batches.map { batch => inputDir + "/" + DataFileDateFormat.format(batcher.earliestTimeOf(batch.next).toDate) + "/" }
+
+    MultipleTextLineFiles(files: _*)
+  }
+
+  val src = Producer.source[Scalding, String](Scalding.pipeFactory(buildFolders(_)))
 
   val actualStore = VersionedStore[String, Long](outputDir + "/" + jobName)
 
@@ -75,4 +101,4 @@ object ScaldingRunner {
     def results = ScaldingRunner.store.readLast(batcher.currentBatch + 1, ScaldingRunner.mode)
     println("Results : " + results)
   }
-}
+}*/
