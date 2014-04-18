@@ -2,7 +2,7 @@ import sbt._
 import Keys._
 import scala.Some
 
-object SummingbirdExampleBuild extends Build {
+object CriteoSummingbirdBuild extends Build {
   def withCross(dep: ModuleID) =
     dep cross CrossVersion.binaryMapped {
       case "2.9.3" => "2.9.2" // TODO: hack because twitter hasn't built things against 2.9.3
@@ -15,10 +15,23 @@ object SummingbirdExampleBuild extends Build {
       case version if version startsWith "2.10" => "org.specs2" %% "specs2" % "1.13" % "test"
   }
 
+  val dfsDatastoresVersion = "1.3.4"
+  val bijectionVersion = "0.6.2"
+  val storehausVersion = "0.8.0"// TO FIX: "0.9.0rc2"
+  val tormentaVersion = "0.7.0"
+  val summingbirdStormVersion = "0.4.1"
+  val summingbirdCoreVersion = "0.4.1"
+  val summingbirdClientVersion = "0.4.1"
+  val summingbirdScaldingVersion = "0.4.1"
+  val jacksonVersion = "2.2.3"
+  val scaldingVersion = "0.9.0rc15"
+
+  lazy val slf4jVersion = "1.6.6"
+
   val extraSettings = Project.defaultSettings
 
   val sharedSettings = extraSettings ++ Seq(
-    organization := "com.company",
+    organization := "com.criteo",
     version := "0.1",
     scalaVersion := "2.9.3",
     //logLevel := Level.Debug,
@@ -33,6 +46,29 @@ object SummingbirdExampleBuild extends Build {
     ),
 
     libraryDependencies <+= scalaVersion(specs2Import(_)),
+
+    libraryDependencies ++= Seq(
+      //"log4j" % "log4j" % "1.2.16",
+      "org.slf4j" % "slf4j-log4j12" % slf4jVersion,
+      "storm" % "storm" % "0.9.0-wip15" exclude("org.slf4j", "log4j-over-slf4j") exclude("ch.qos.logback", "logback-classic"),
+      //"storm" % "storm-kafka" % "0.9.0-wip15-scala292" exclude("com.twitter", "kafka_2.9.2"),
+      "com.twitter" %% "bijection-netty" % bijectionVersion,
+      "com.twitter" %% "tormenta-kafka" % tormentaVersion,// exclude("storm", "storm-kafka"),
+      "com.fasterxml.jackson.module" %% "jackson-module-scala" % jacksonVersion,
+      "com.twitter" %% "storehaus-memcache" % storehausVersion,
+      "com.twitter" %% "summingbird-storm" % summingbirdStormVersion,
+      "com.twitter" %% "summingbird-core" % summingbirdCoreVersion,
+      "com.twitter" %% "summingbird-client" % summingbirdClientVersion,
+      "com.twitter" %% "summingbird-scalding" % summingbirdScaldingVersion,
+      "com.twitter" %% "summingbird-builder" % summingbirdScaldingVersion,
+      "com.twitter" %% "scalding-args" % scaldingVersion,
+      "com.twitter" %% "bijection-core" % bijectionVersion,
+
+      "com.twitter" %% "summingbird-scalding-test" % summingbirdScaldingVersion,
+      "org.scalatest" %% "scalatest" % "1.9.2" withSources(),
+      "com.twitter" %% "summingbird-storm-test" % summingbirdStormVersion,
+      "junit" % "junit" % "4.4"
+    ),
 
     resolvers ++= Seq(
       Opts.resolver.sonatypeSnapshots,
@@ -70,70 +106,13 @@ object SummingbirdExampleBuild extends Build {
 
   )
 
-  lazy val summingbirdExample = Project(
-    id = "summingbird-example",
+  lazy val criteoSummingbird = Project(
+    id = "criteo-summingbird",
     base = file("."),
     settings = sharedSettings
   ).settings(
     test := { },
     publish := { }, // skip publishing for this root project.
     publishLocal := { }
-  ).aggregate(
-      hybridExample
-  ).settings(net.virtualvoid.sbt.graph.Plugin.graphSettings: _*)
-
-  val dfsDatastoresVersion = "1.3.4"
-  val bijectionVersion = "0.6.2"
-  val storehausVersion = "0.8.0"// TO FIX: "0.9.0rc2"
-  val tormentaVersion = "0.7.0"
-  val summingbirdStormVersion = "0.4.1"
-  val summingbirdCoreVersion = "0.4.1"
-  val summingbirdClientVersion = "0.4.1"
-  val summingbirdScaldingVersion = "0.4.1"
-  val jacksonVersion = "2.2.3"
-  val scaldingVersion = "0.9.0rc15"
-
-  lazy val slf4jVersion = "1.6.6"
-
-  def module(name: String) = {
-    val id = "company-%s".format(name)
-    Project(id = id, base = file(id), settings = sharedSettings ++ Seq(
-      Keys.name := id)
-    ).settings(net.virtualvoid.sbt.graph.Plugin.graphSettings: _*)
-  }
-
-  lazy val kafkaInjector = module("kafka-injector").settings(
-    libraryDependencies ++= Seq(
-      "org.slf4j" % "slf4j-log4j12" % slf4jVersion,
-      "org.apache.kafka" % "kafka" % "0.7.2" //withSources()
-        exclude("javax.jms", "jms")
-        exclude("com.sun.jdmk", "jmxtools")
-        exclude("com.sun.jmx", "jmxri")
-    )
-  )
-
-  lazy val hybridExample = module("hybrid-example").settings(
-    libraryDependencies ++= Seq(
-      //"log4j" % "log4j" % "1.2.16",
-      "org.slf4j" % "slf4j-log4j12" % slf4jVersion,
-      "storm" % "storm" % "0.9.0-wip15" exclude("org.slf4j", "log4j-over-slf4j") exclude("ch.qos.logback", "logback-classic"),
-      //"storm" % "storm-kafka" % "0.9.0-wip15-scala292" exclude("com.twitter", "kafka_2.9.2"),
-      "com.twitter" %% "bijection-netty" % bijectionVersion,
-      "com.twitter" %% "tormenta-kafka" % tormentaVersion,// exclude("storm", "storm-kafka"),
-      "com.fasterxml.jackson.module" %% "jackson-module-scala" % jacksonVersion,
-      "com.twitter" %% "storehaus-memcache" % storehausVersion,
-      "com.twitter" %% "summingbird-storm" % summingbirdStormVersion,
-      "com.twitter" %% "summingbird-core" % summingbirdCoreVersion,
-      "com.twitter" %% "summingbird-client" % summingbirdClientVersion,
-      "com.twitter" %% "summingbird-scalding" % summingbirdScaldingVersion,
-      "com.twitter" %% "summingbird-builder" % summingbirdScaldingVersion,
-      "com.twitter" %% "scalding-args" % scaldingVersion,
-      "com.twitter" %% "bijection-core" % bijectionVersion,
-
-      "com.twitter" %% "summingbird-scalding-test" % summingbirdScaldingVersion,
-      "org.scalatest" %% "scalatest" % "1.9.2" withSources(),
-      "com.twitter" %% "summingbird-storm-test" % summingbirdStormVersion,
-      "junit" % "junit" % "4.4"
-    )
   )
 }

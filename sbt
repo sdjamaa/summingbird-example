@@ -98,7 +98,7 @@ die() {
 
 make_url () {
   version="$1"
-  
+
   echo "$sbt_launch_repo/org.scala-sbt/sbt-launch/$version/sbt-launch.jar"
 }
 
